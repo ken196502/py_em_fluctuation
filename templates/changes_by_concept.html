@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>盘口异动</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -9,7 +10,7 @@
     <script>
         // Function to load and display data
         function loadData() {
-            fetch('/api/changes/json', {
+            fetch('http://0.0.0.0:61125/api/changes/json', {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json'
@@ -89,20 +90,33 @@
         
         // Check if current time is within Chinese stock market hours (Mon-Fri, 9:30-11:30, 13:00-15:00 Beijing Time)
         function isTradingHours() {
-            const now = new Date();
-            const beijingOffset = 8 * 60 * 60 * 1000; // Beijing is UTC+8
-            const localOffset = now.getTimezoneOffset() * 60 * 1000;
-            const beijingTime = new Date(now.getTime() + localOffset + beijingOffset);
+            // 使用toLocaleString获取北京时间
+            const options = { 
+                timeZone: 'Asia/Shanghai',
+                hour: 'numeric',
+                minute: 'numeric',
+                weekday: 'long',
+                hour12: false
+            };
             
-            const day = beijingTime.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-            const hours = beijingTime.getUTCHours();
-            const minutes = beijingTime.getUTCMinutes();
+            const now = new Date();
+            const beijingTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+            const day = beijingTime.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const hours = beijingTime.getHours();
+            const minutes = beijingTime.getMinutes();
             const currentMinutes = hours * 60 + minutes;
             
+            // 添加调试信息
+            console.log('Beijing Time:', beijingTime);
+            console.log('Day:', day, 'Time:', hours + ':' + minutes);
+            
             // Check if it's a weekday (1-5) and within market hours
-            return day >= 1 && day <= 5 && // Monday to Friday
-                  ((currentMinutes >= 9 * 60 + 30 && currentMinutes < 11 * 60 + 30) || // 9:30-11:30
-                   (currentMinutes >= 13 * 60 && currentMinutes < 15 * 60)); // 13:00-15:00
+            const isTrading = day >= 1 && day <= 5 && // Monday to Friday
+                             ((currentMinutes >= 9 * 60 + 30 && currentMinutes < 11 * 60 + 30) || // 9:30-11:30
+                              (currentMinutes >= 13 * 60 && currentMinutes < 15 * 60)); // 13:00-15:00
+            
+            console.log('Is trading hours:', isTrading);
+            return isTrading;
         }
         
         // Load data when page loads and set up auto-refresh
