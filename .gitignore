@@ -347,3 +347,5 @@ dist
 /server/*.js
 .vercel
 .env*.local
+
+/static
